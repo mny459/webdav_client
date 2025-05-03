@@ -104,6 +104,9 @@ String fixSlash(String s) {
 
 // 添加 '/' 前后缀
 String fixSlashes(String s) {
+  if (s.startsWith('http://') || s.startsWith('https://')) {
+    return s;
+  }
   if (!s.startsWith('/')) {
     s = '/${s}';
   }
@@ -126,4 +129,26 @@ String path2Name(String path) {
     return '/';
   }
   return str;
+}
+
+// final String uri;
+String jianGuoYunNextLink(String uri, Headers headers) {
+  // 判断响应头中是否包含link关键字
+  if (!uri.contains('jianguoyun.com')) return '';
+  if (!headers.map.containsKey('link')) return '';
+  final link = headers.map['link']?.first ?? '';
+  var nextLink = "";
+  final match = RegExp(r'<(.*?)>;\s*rel="(.*?)"').firstMatch(link);
+  if (match != null && match.groupCount >= 2) {
+    final parsedLink = match.group(1) ?? '';
+    final parsedRel = match.group(2) ?? '';
+    if (parsedRel == 'next') {
+      if (parsedLink.startsWith('/')) {
+        nextLink = "https://dav.jianguoyun.com$parsedLink";
+      } else {
+        nextLink = parsedLink;
+      }
+    }
+  }
+  return nextLink;
 }

@@ -66,9 +66,18 @@ class Client {
     var resp = await this
         .c
         .wdPropfind(this, path, true, fileXmlStr, cancelToken: cancelToken);
-
+    final result = <File>[];
     String str = resp.data;
-    return WebdavXml.toFiles(path, str);
+    result.addAll(WebdavXml.toFiles(path, str));
+    var nextLink = jianGuoYunNextLink(uri, resp.headers);
+    while (nextLink.isNotEmpty) {
+      resp = await this.c.wdPropfind(this, nextLink, true, fileXmlStr,
+          cancelToken: cancelToken);
+      str = resp.data;
+      result.addAll(WebdavXml.toFiles(path, str));
+      nextLink = jianGuoYunNextLink(uri, resp.headers);
+    }
+    return result;
   }
 
   /// Read a single files properties
